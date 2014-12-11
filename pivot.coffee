@@ -121,12 +121,12 @@ aggregators = do (tpl = aggregatorTemplates) ->
     "Count as Fraction of Columns": tpl.fractionOf(tpl.count(), "col",   usFmtPct)
 
 renderers =
-    "Table":          (pvtData, opts) ->   pivotTableRenderer(pvtData, opts)
-    "Multi-Aggr":     (pvtData, opts) ->   pivotTableRendererMany(pvtData, opts)
-    "Table Barchart": (pvtData, opts) -> $(pivotTableRenderer(pvtData, opts)).barchart()
-    "Heatmap":        (pvtData, opts) -> $(pivotTableRenderer(pvtData, opts)).heatmap()
-    "Row Heatmap":    (pvtData, opts) -> $(pivotTableRenderer(pvtData, opts)).heatmap("rowheatmap")
-    "Col Heatmap":    (pvtData, opts) -> $(pivotTableRenderer(pvtData, opts)).heatmap("colheatmap")
+    "Table":                        (pvtData, opts) ->   pivotTableRenderer(pvtData, opts)
+    "Table (Multiple Aggregators)": (pvtData, opts) ->   pivotTableRendererMany(pvtData, opts)
+    "Table Barchart":               (pvtData, opts) -> $(pivotTableRenderer(pvtData, opts)).barchart()
+    "Heatmap":                      (pvtData, opts) -> $(pivotTableRenderer(pvtData, opts)).heatmap()
+    "Row Heatmap":                  (pvtData, opts) -> $(pivotTableRenderer(pvtData, opts)).heatmap("rowheatmap")
+    "Col Heatmap":                  (pvtData, opts) -> $(pivotTableRenderer(pvtData, opts)).heatmap("colheatmap")
 
 locales = 
     en: 
@@ -205,6 +205,7 @@ class PivotData
         @aggregator = opts.aggregator
         @aggregatorName = opts.aggregatorName
         @aggregatorsList = []
+        @aggregatorNames = []
         @colAttrs = opts.cols
         @rowAttrs = opts.rows
         @valAttrs = opts.vals
@@ -212,6 +213,7 @@ class PivotData
         @rowKeys = []
         @colKeys = []
         @rowTotals = {}
+        @rowTotalsList = {}
         @rowTotals2 = {}
         @colTotals = {}
         @allTotal = @aggregator(this, [], [])
@@ -222,6 +224,7 @@ class PivotData
             for aggregator in opts.aggregatorsList
                 @aggregatorsList.push(aggregators[aggregator.name](aggregator.vals))
                 @allTotals.push(aggregators[aggregator.name](aggregator.vals)(this, [], []))
+                @aggregatorNames.push aggregator.name
         # iterate through input, accumulating data for cells
         PivotData.forEachRecord input, opts.derivedAttributes, (record) =>
             @processRecord(record) if opts.filter(record)
@@ -293,20 +296,19 @@ class PivotData
             t.push record
 
         if rowKey.length != 0
+            @rowKeys.push rowKey
             if @aggregatorsList.length > 0
-                if not @rowTotals[flatRowKey]
-                    @rowKeys.push rowKey
-                    @rowTotals[flatRowKey] = []
+                if not @rowTotalsList[flatRowKey]
+                    @rowTotalsList[flatRowKey] = []
                     for agg in @aggregatorsList
-                        @rowTotals[flatRowKey].push(agg(this, rowKey, []))
+                        @rowTotalsList[flatRowKey].push(agg(this, rowKey, []))
                 
-                for a in @rowTotals[flatRowKey]
+                for a in @rowTotalsList[flatRowKey]
                     a.push record
-            else
-                if not @rowTotals[flatRowKey]
-                    @rowKeys.push rowKey
-                    @rowTotals[flatRowKey] = @aggregator(this, rowKey, [])
-                @rowTotals[flatRowKey].push record
+
+            if not @rowTotals[flatRowKey]
+                @rowTotals[flatRowKey] = @aggregator(this, rowKey, [])
+            @rowTotals[flatRowKey].push record
 
         if colKey.length != 0
             if not @colTotals[flatColKey]
@@ -321,31 +323,21 @@ class PivotData
                 @tree[flatRowKey][flatColKey] = @aggregator(this, rowKey, colKey)
             @tree[flatRowKey][flatColKey].push record
 
-    getAggregator: (rowKey, colKey) =>
+    getAggregator: (rowKey, colKey, multi=false) =>
         flatRowKey = rowKey.join(String.fromCharCode(0))
         flatColKey = colKey.join(String.fromCharCode(0))
         if rowKey.length == 0 and colKey.length == 0
-            if @allTotals.length > 0
+            if multi is true
                 agg = @allTotals
             else
                 agg = @allTotal
         else if rowKey.length == 0
             agg = @colTotals[flatColKey]
         else if colKey.length == 0
-            agg = @rowTotals[flatRowKey]
-        else
-            agg = @tree[flatRowKey][flatColKey]
-        return agg ? {value: (-> null), format: -> ""}
-
-    getAggregator2: (rowKey, colKey) =>
-        flatRowKey = rowKey.join(String.fromCharCode(0))
-        flatColKey = colKey.join(String.fromCharCode(0))
-        if rowKey.length == 0 and colKey.length == 0
-            agg = @allTotal
-        else if rowKey.length == 0
-            agg = @colTotals[flatColKey]
-        else if colKey.length == 0
-            agg = @rowTotals2[flatRowKey]
+            if multi is true
+                agg = @rowTotalsList[flatRowKey]
+            else
+                agg = @rowTotals[flatRowKey]
         else
             agg = @tree[flatRowKey][flatColKey]
         return agg ? {value: (-> null), format: -> ""}
@@ -362,6 +354,7 @@ pivotTableRenderer = (pivotData, opts) ->
 
     opts = $.extend defaults, opts
 
+    $('.pvtVals, .pvtCols').show()
     colAttrs = pivotData.colAttrs
     rowAttrs = pivotData.rowAttrs
     rowKeys = pivotData.getRowKeys()
@@ -509,6 +502,7 @@ pivotTableRendererMany = (pivotData, opts) ->
 
     opts = $.extend defaults, opts
 
+    $('.pvtVals, .pvtCols').hide()
     rowAttrs = pivotData.rowAttrs
     rowKeys = pivotData.getRowKeys()
 
@@ -542,10 +536,19 @@ pivotTableRendererMany = (pivotData, opts) ->
             th.className = "pvtAxisLabel"
             th.textContent = r
             tr.appendChild th 
-        th = document.createElement("th")
-        th.className = "pvtTotalLabel"
-        th.innerHTML = opts.localeStrings.totals
-        tr.appendChild th
+
+        if pivotData.aggregatorNames.length > 0
+            for agname in pivotData.aggregatorNames
+                th = document.createElement("th")
+                th.className = "pvtTotalLabel"
+                th.innerHTML = agname
+                tr.appendChild th
+        else
+            th = document.createElement("th")
+            th.className = "pvtTotalLabel"
+            th.innerHTML = opts.localeStrings.totals
+            tr.appendChild th
+
         result.appendChild tr
 
     #now the actual data rows, with their row headers and totals
@@ -561,21 +564,26 @@ pivotTableRendererMany = (pivotData, opts) ->
                 tr.appendChild th
 
         if pivotData.aggregatorsList.length > 0
-            totalAggregators = pivotData.getAggregator(rowKey, [])
-            val = []
+            totalAggregators = pivotData.getAggregator(rowKey, [], true)
+            val = null
             for aggregator in totalAggregators
-                val.push(aggregator.format(aggregator.value()))
-            val = val.join("/")
+                val = aggregator.value()
+                td = document.createElement("td")
+                td.className = "pvtTotal rowTotal"
+                td.innerHTML = aggregator.format(val)
+                td.setAttribute("data-value", val)
+                td.setAttribute("data-for", "row"+i)
+                tr.appendChild td
         else
             totalAggregator = pivotData.getAggregator(rowKey, [])
             val = totalAggregator.format(totalAggregator.value())
 
-        td = document.createElement("td")
-        td.className = "pvtTotal rowTotal"
-        td.innerHTML = val
-        td.setAttribute("data-value", val)
-        td.setAttribute("data-for", "row"+i)
-        tr.appendChild td
+            td = document.createElement("td")
+            td.className = "pvtTotal rowTotal"
+            td.innerHTML = val
+            td.setAttribute("data-value", val)
+            td.setAttribute("data-for", "row"+i)
+            tr.appendChild td
         result.appendChild tr
 
     #finally, the row for col totals, and a grand total
@@ -586,19 +594,23 @@ pivotTableRendererMany = (pivotData, opts) ->
     th.setAttribute("colspan", rowAttrs.length)
     tr.appendChild th
     if pivotData.aggregatorsList.length > 0
-        totalAggregators = pivotData.getAggregator([], [])
-        val = []
+        totalAggregators = pivotData.getAggregator([], [], true)
+        val = null
         for aggregator in totalAggregators
-            val.push(aggregator.format(aggregator.value()))
-        val = val.join("/")
+            val = aggregator.value()
+            td = document.createElement("td")
+            td.className = "pvtGrandTotal"
+            td.innerHTML = aggregator.format(val)
+            td.setAttribute("data-value", val)
+            tr.appendChild td
     else
         totalAggregator = pivotData.getAggregator([], [])
         val = totalAggregator.format(totalAggregator.value())
-    td = document.createElement("td")
-    td.className = "pvtGrandTotal"
-    td.innerHTML = val
-    td.setAttribute("data-value", val)
-    tr.appendChild td
+        td = document.createElement("td")
+        td.className = "pvtGrandTotal"
+        td.innerHTML = val
+        td.setAttribute("data-value", val)
+        tr.appendChild td
     result.appendChild tr
 
     #squirrel this away for later

@@ -39,11 +39,12 @@ $.pivotUtilities.locales.pt =
         "Contagem como Fra&ccedil;&atilde;o da Coluna": tpl.fractionOf(tpl.count(), "col",   frFmtPct)
 
     renderers:
-        "Tabela":                    r["Table"]
-        "Tabela com Barras":         r["Table Barchart"]
-        "Mapa de Calor":             r["Heatmap"]
-        "Mapa de Calor por Linhas":  r["Row Heatmap"]
-        "Mapa de Calor por Colunas": r["Col Heatmap"]
+        "Tabela":                                r["Table"]
+        "Tabela (M&uacute;ltiplos Agregadores)": r["Table (Multiple Aggregators)"]
+        "Tabela com Barras":                     r["Table Barchart"]
+        "Mapa de Calor":                         r["Heatmap"]
+        "Mapa de Calor por Linhas":              r["Row Heatmap"]
+        "Mapa de Calor por Colunas":             r["Col Heatmap"]
 	
     gchart_renderers:
         "Gr&aacute;fico de Linhas":            gcr["Line Chart"]
