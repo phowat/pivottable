@@ -80,6 +80,16 @@ aggregatorTemplates =
         format: formatter
         numInputs: if num? and denom? then 0 else 2
 
+    countUniqueOverSum: (formatter=usFmt) -> ([attr, denom]) -> (data, rowKey, colKey) ->
+        uniqNum: []
+        sumDenom: 0
+        push: (record) ->
+            @uniqNum.push(record[attr]) if record[attr] not in @uniqNum
+            @sumDenom += parseFloat(record[denom]) if not isNaN parseFloat(record[denom])
+        value: -> @uniqNum.length/@sumDenom
+        format: formatter
+        numInputs: if num? and denom? then 0 else 2
+
     sumOverSumBound80: (upper=true, formatter=usFmt) -> ([num, denom]) -> (data, rowKey, colKey) ->
         sumNum: 0
         sumDenom: 0
@@ -111,6 +121,9 @@ aggregators = do (tpl = aggregatorTemplates) ->
     "Integer Sum":          tpl.sum(usFmtInt)
     "Average":              tpl.average(usFmt)
     "Sum over Sum":         tpl.sumOverSum(usFmt)
+    "Sum over Sum (Percentage)": tpl.sumOverSum(usFmtPct)
+    "Count Unique over Sum":         tpl.countUniqueOverSum(usFmt)
+    "Count Unique over Sum (Percentage)": tpl.countUniqueOverSum(usFmtPct)
     "80% Upper Bound":      tpl.sumOverSumBound80(true, usFmt)
     "80% Lower Bound":      tpl.sumOverSumBound80(false, usFmt)
     "Sum as Fraction of Total":     tpl.fractionOf(tpl.sum(),   "total", usFmtPct)
