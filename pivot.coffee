@@ -309,9 +309,9 @@ class PivotData
             t.push record
 
         if rowKey.length != 0
-            @rowKeys.push rowKey
             if @aggregatorsList.length > 0
                 if not @rowTotalsList[flatRowKey]
+                    @rowKeys.push rowKey
                     @rowTotalsList[flatRowKey] = []
                     for agg in @aggregatorsList
                         @rowTotalsList[flatRowKey].push(agg(this, rowKey, []))
@@ -320,6 +320,7 @@ class PivotData
                     a.push record
 
             if not @rowTotals[flatRowKey]
+                @rowKeys.push rowKey
                 @rowTotals[flatRowKey] = @aggregator(this, rowKey, [])
             @rowTotals[flatRowKey].push record
 
@@ -341,23 +342,17 @@ class PivotData
         flatColKey = colKey.join(String.fromCharCode(0))
         if rowKey.length == 0 and colKey.length == 0
             if multi is true
-                console.log("DELETEME: getAggregator -> allTotals")
                 agg = @allTotals
             else
                 agg = @allTotal
-                console.log("DELETEME: getAggregator -> allTotal", agg)
         else if rowKey.length == 0
-            console.log("DELETEME: getAggregator -> colTotals")
             agg = @colTotals[flatColKey]
         else if colKey.length == 0
             if multi is true
-                console.log("DELETEME: getAggregator -> rowTotalsList")
                 agg = @rowTotalsList[flatRowKey]
             else
-                console.log("DELETEME: getAggregator -> rowTotals")
                 agg = @rowTotals[flatRowKey]
         else
-            console.log("DELETEME: getAggregator -> tree")
             agg = @tree[flatRowKey][flatColKey]
         return agg ? {value: (-> null), format: -> ""}
 
@@ -447,7 +442,6 @@ pivotTableRenderer = (pivotData, opts) ->
         result.appendChild tr
 
     #now the actual data rows, with their row headers and totals
-    console.log("DELETEME: ROW KEYS ", rowKeys)
     for own i, rowKey of rowKeys
         tr = document.createElement("tr")
         for own j, txt of rowKey
