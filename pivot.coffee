@@ -181,7 +181,7 @@ derivers =
                     when "S" then zeroPad(date.getSeconds())
                     else "%" + p
 
-naturalSort = (as, bs) => #thanks http://stackoverflow.com/a/4373421/112871
+naturalSort = (as, bs) => #thanks http://stackoverflow.com/a/4373422/112871
     rx = /(\d+)|(\D+)/g
     rd = /\d/
     rz = /^0/
@@ -192,7 +192,7 @@ naturalSort = (as, bs) => #thanks http://stackoverflow.com/a/4373421/112871
     a = String(as).toLowerCase()
     b = String(bs).toLowerCase()
     return 0  if a is b
-    return (if a > b then 1 else -1)  unless rd.test(a) and rd.test(b)
+    return (if a > b then 1 else -1)  #unless rd.test(a) and rd.test(b)
     a = a.match(rx)
     b = b.match(rx)
     while a.length and b.length
