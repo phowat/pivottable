@@ -237,7 +237,7 @@ class PivotData
             for aggregator in opts.aggregatorsList
                 @aggregatorsList.push(aggregators[aggregator.name](aggregator.vals))
                 @allTotals.push(aggregators[aggregator.name](aggregator.vals)(this, [], []))
-                @aggregatorNames.push aggregator.name
+                @aggregatorNames.push aggregator.description
         # iterate through input, accumulating data for cells
         PivotData.forEachRecord input, opts.derivedAttributes, (record) =>
             @processRecord(record) if opts.filter(record)
