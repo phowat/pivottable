@@ -311,7 +311,6 @@ class PivotData
         if rowKey.length != 0
             if @aggregatorsList.length > 0
                 if not @rowTotalsList[flatRowKey]
-                    @rowKeys.push rowKey
                     @rowTotalsList[flatRowKey] = []
                     for agg in @aggregatorsList
                         @rowTotalsList[flatRowKey].push(agg(this, rowKey, []))
