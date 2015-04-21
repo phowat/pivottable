@@ -116,7 +116,11 @@ aggregatorTemplates =
         inner: wrapped(x...)(data, rowKey, colKey)
         push: (record) -> @inner.push record
         format: formatter
-        value: -> @inner.value() / data.getAggregator(@selector...).inner.value()
+        value: -> 
+            try
+                @inner.value() / data.getAggregator(@selector...).inner.value()
+            catch error
+                @inner.value() / data.getAggregator(@selector...).value()
         numInputs: wrapped(x...)().numInputs
 
 #default aggregators & renderers use US naming and number formatting

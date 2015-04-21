@@ -320,7 +320,13 @@
             },
             format: formatter,
             value: function() {
-              return this.inner.value() / data.getAggregator.apply(data, this.selector).inner.value();
+              var error;
+              try {
+                return this.inner.value() / data.getAggregator.apply(data, this.selector).inner.value();
+              } catch (_error) {
+                error = _error;
+                return this.inner.value() / data.getAggregator.apply(data, this.selector).value();
+              }
             },
             numInputs: wrapped.apply(null, x)().numInputs
           };
