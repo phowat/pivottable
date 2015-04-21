@@ -24,6 +24,7 @@ $.pivotUtilities.locales.pt =
     aggregators:
         "Contagem":                                     tpl.count(frFmtInt)
         "Contagem de Valores &uacute;nicos":            tpl.countUnique(frFmtInt)
+        "Contagem de Valores N&acute;o Vazios &uacute;nicos": tpl.countUniqueNotEmpty(frFmtInt)
         "Lista de Valores &uacute;nicos":               tpl.listUnique(", ")
         "Soma":                                         tpl.sum(frFmt)
         "Soma de Inteiros":                             tpl.sum(frFmtInt)

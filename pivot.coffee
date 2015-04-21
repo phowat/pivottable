@@ -45,6 +45,13 @@ aggregatorTemplates =
         format: formatter
         numInputs: if attr? then 0 else 1
 
+    countUniqueNotEmpty: (formatter=usFmtInt) -> ([attr]) -> (data, rowKey, colKey) ->
+        uniq: []
+        push: (record) -> @uniq.push(record[attr]) if record[attr]? and record[attr].length > 0 and record[attr] not in @uniq
+        value: -> @uniq.length
+        format: formatter
+        numInputs: if attr? then 0 else 1
+
     listUnique: (sep) -> ([attr]) -> (data, rowKey, colKey)  ->
         uniq: []
         push: (record) -> @uniq.push(record[attr]) if record[attr] not in @uniq
@@ -116,6 +123,7 @@ aggregatorTemplates =
 aggregators = do (tpl = aggregatorTemplates) -> 
     "Count":                tpl.count(usFmtInt)
     "Count Unique Values":  tpl.countUnique(usFmtInt)
+    "Count Unique Not Empty Values":  tpl.countUniqueNotEmpty(usFmtInt)
     "List Unique Values":   tpl.listUnique(", ")
     "Sum":                  tpl.sum(usFmt)
     "Integer Sum":          tpl.sum(usFmtInt)
