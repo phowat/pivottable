@@ -410,9 +410,9 @@ pivotTableRenderer = (pivotData, opts) ->
     #the first few rows are for col headers
     for own j, c of colAttrs
         tr = document.createElement("tr")
-        if parseInt(j) == 0 and rowAttrs.length != 0
+        if parseInt(j) == 0 and rowAttrs.length > 1
             th = document.createElement("th")
-            th.setAttribute("colspan", rowAttrs.length)
+            th.setAttribute("colspan", rowAttrs.length-1)
             th.setAttribute("rowspan", colAttrs.length)
             tr.appendChild th
         th = document.createElement("th")
@@ -445,11 +445,12 @@ pivotTableRenderer = (pivotData, opts) ->
             th.className = "pvtAxisLabel"
             th.textContent = r
             tr.appendChild th 
-        th = document.createElement("th")
+        
         if colAttrs.length ==0
+            th = document.createElement("th")
             th.className = "pvtTotalLabel"
             th.innerHTML = opts.localeStrings.totals
-        tr.appendChild th
+            tr.appendChild th
         result.appendChild tr
 
     #now the actual data rows, with their row headers and totals
@@ -462,8 +463,6 @@ pivotTableRenderer = (pivotData, opts) ->
                 th.className = "pvtRowLabel"
                 th.textContent = txt
                 th.setAttribute("rowspan", x)
-                if parseInt(j) == rowAttrs.length-1 and colAttrs.length !=0
-                    th.setAttribute("colspan",2)
                 tr.appendChild th
         for own j, colKey of colKeys #this is the tight loop
             aggregator = pivotData.getAggregator(rowKey, colKey)
@@ -489,7 +488,7 @@ pivotTableRenderer = (pivotData, opts) ->
     th = document.createElement("th")
     th.className = "pvtTotalLabel"
     th.innerHTML = opts.localeStrings.totals
-    th.setAttribute("colspan", rowAttrs.length + (if colAttrs.length == 0 then 0 else 1))
+    th.setAttribute("colspan", rowAttrs.length)
     tr.appendChild th
     for own j, colKey of colKeys
         totalAggregator = pivotData.getAggregator([], colKey)
