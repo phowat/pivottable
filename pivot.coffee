@@ -14,8 +14,8 @@ addSeparators = (nStr, thousandsSep, decimalSep) ->
     return x1 + x2
 
 numberFormat = (opts) ->
-    defaults = 
-        digitsAfterDecimal: 2, scaler: 1, 
+    defaults =
+        digitsAfterDecimal: 2, scaler: 1,
         thousandsSep: ",", decimalSep: "."
         prefix: "", suffix: ""
         showZero: false
@@ -116,7 +116,7 @@ aggregatorTemplates =
         inner: wrapped(x...)(data, rowKey, colKey)
         push: (record) -> @inner.push record
         format: formatter
-        value: -> 
+        value: ->
             try
                 @inner.value() / data.getAggregator(@selector...).inner.value()
             catch error
@@ -124,7 +124,7 @@ aggregatorTemplates =
         numInputs: wrapped(x...)().numInputs
 
 #default aggregators & renderers use US naming and number formatting
-aggregators = do (tpl = aggregatorTemplates) -> 
+aggregators = do (tpl = aggregatorTemplates) ->
     "Count":                tpl.count(usFmtInt)
     "Count Unique Values":  tpl.countUnique(usFmtInt)
     "Count Unique Not Empty Values":  tpl.countUniqueNotEmpty(usFmtInt)
@@ -153,11 +153,11 @@ renderers =
     "Row Heatmap":                  (pvtData, opts) -> $(pivotTableRenderer(pvtData, opts)).heatmap("rowheatmap")
     "Col Heatmap":                  (pvtData, opts) -> $(pivotTableRenderer(pvtData, opts)).heatmap("colheatmap")
 
-locales = 
-    en: 
+locales =
+    en:
         aggregators: aggregators
         renderers: renderers
-        localeStrings: 
+        localeStrings:
             renderError: "An error occurred rendering the PivotTable results."
             computeError: "An error occurred computing the PivotTable results."
             uiRenderError: "An error occurred rendering the PivotTable UI."
@@ -244,7 +244,7 @@ class PivotData
         @allTotal = @aggregator(this, [], [])
         @allTotals = []
         @sorted = false
-        
+
         if opts.aggregatorsList?
             for aggregator in opts.aggregatorsList
                 @aggregatorsList.push(aggregators[aggregator.name](aggregator.vals))
@@ -259,7 +259,7 @@ class PivotData
         if $.isEmptyObject derivedAttributes
             addRecord = f
         else
-            addRecord = (record) -> 
+            addRecord = (record) ->
                 record[k] = v(record) ? record[k] for k, v of derivedAttributes
                 f(record)
 
@@ -311,7 +311,7 @@ class PivotData
     processRecord: (record) -> #this code is called in a tight loop
         colKey = []
         rowKey = []
-        colKey.push record[x] ? "null" for x in @colAttrs 
+        colKey.push record[x] ? "null" for x in @colAttrs
         rowKey.push record[x] ? "null" for x in @rowAttrs
         flatRowKey = rowKey.join(String.fromCharCode(0))
         flatColKey = colKey.join(String.fromCharCode(0))
@@ -326,7 +326,7 @@ class PivotData
                     @rowTotalsList[flatRowKey] = []
                     for agg in @aggregatorsList
                         @rowTotalsList[flatRowKey].push(agg(this, rowKey, []))
-                
+
                 for a in @rowTotalsList[flatRowKey]
                     a.push record
 
@@ -444,8 +444,8 @@ pivotTableRenderer = (pivotData, opts) ->
             th = document.createElement("th")
             th.className = "pvtAxisLabel"
             th.textContent = r
-            tr.appendChild th 
-        
+            tr.appendChild th
+
         if colAttrs.length ==0
             th = document.createElement("th")
             th.className = "pvtTotalLabel"
@@ -559,7 +559,7 @@ pivotTableRendererMany = (pivotData, opts) ->
             th = document.createElement("th")
             th.className = "pvtAxisLabel"
             th.textContent = r
-            tr.appendChild th 
+            tr.appendChild th
 
         if pivotData.aggregatorNames.length > 0
             for agname in pivotData.aggregatorNames
@@ -654,7 +654,7 @@ $.fn.pivot = (input, opts) ->
         aggregator: aggregatorTemplates.count()()
         aggregatorName: "Count"
         derivedAttributes: {},
-        renderer: pivotTableRenderer
+        renderer: pivotTableRendererMany
         rendererOptions: null
         localeStrings: locales.en.localeStrings
 
@@ -671,7 +671,7 @@ $.fn.pivot = (input, opts) ->
     catch e
         console.error(e.stack) if console?
         result = $("<span>").html opts.localeStrings.computeError
-    
+
     x = this[0]
     x.removeChild(x.lastChild) while x.hasChildNodes()
     return @append result
