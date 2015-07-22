@@ -1,4 +1,5 @@
 $ = jQuery
+_pivotData = null
 
 ###
 Utilities
@@ -646,7 +647,7 @@ pivotTableRendererMany = (pivotData, opts) ->
 Pivot Table core: create PivotData object and call Renderer on it
 ###
 
-$.fn.pivot = (input, opts) ->
+$.fn.pivot = (input, opts, rendererRefresh = false) ->
     defaults =
         cols : []
         rows: []
@@ -662,9 +663,10 @@ $.fn.pivot = (input, opts) ->
 
     result = null
     try
-        pivotData = new PivotData(input, opts)
+        if rendererRefresh != true
+            _pivotData = new PivotData(input, opts)
         try
-            result = opts.renderer(pivotData, opts.rendererOptions)
+            result = opts.renderer(_pivotData, opts.rendererOptions)
         catch e
             console.error(e.stack) if console?
             result = $("<span>").html opts.localeStrings.renderError
@@ -727,7 +729,7 @@ $.fn.pivotUI = (input, inputOpts, overwrite = false, locale="en") ->
 
         renderer = $("<select class='pvtRenderer'>")
             .appendTo(rendererControl)
-            .bind "change", -> refresh() #capture reference
+            .bind "change", -> refresh(true) #capture reference
         for own x of opts.renderers
             $("<option>").val(x).html(x).appendTo(renderer)
 
@@ -863,7 +865,7 @@ $.fn.pivotUI = (input, inputOpts, overwrite = false, locale="en") ->
         initialRender = true
 
         #set up for refreshing
-        refreshDelayed = =>
+        refreshDelayed = (rendererRefresh = false) =>
             subopts =
                 derivedAttributes: opts.derivedAttributes
                 localeStrings: opts.localeStrings
@@ -922,7 +924,7 @@ $.fn.pivotUI = (input, inputOpts, overwrite = false, locale="en") ->
                     return false if ""+record[k] in excludedItems
                 return true
 
-            pivotTable.pivot(input,subopts)
+            pivotTable.pivot(input,subopts, rendererRefresh)
             pivotUIOptions = $.extend opts,
                 cols: subopts.cols
                 rows: subopts.rows
@@ -944,9 +946,9 @@ $.fn.pivotUI = (input, inputOpts, overwrite = false, locale="en") ->
             pivotTable.css("opacity", 1)
             opts.onRefresh(pivotUIOptions) if opts.onRefresh?
 
-        refresh = =>
+        refresh = (rendererRefresh = false) =>
             pivotTable.css("opacity", 0.5)
-            setTimeout refreshDelayed, 10
+            setTimeout refreshDelayed, 10, rendererRefresh
 
         #the very first refresh will actually display the table
         refresh()
